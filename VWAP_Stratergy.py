@@ -14,17 +14,17 @@ def MyVwap(df):
 
 	ResVWAP={}
 	ResVWAP["time"]=[]
-	ResVWAP["TP"]=[]
+	ResVWAP["VWAP"]=[]
 
 	for cand in range(df.shape[0]):
-		print(df.index[cand].isoformat())
+
 		CumTPxVol+=((df['high'][cand]+df['low'][cand]+df['close'][cand])/3)*df['volume'][cand]
 		CumVol+=df['volume'][cand]
 
 		volumated_average_price=CumTPxVol/CumVol
 
 		ResVWAP["time"].append(df.index[cand])
-		ResVWAP["TP"].append(volumated_average_price)
+		ResVWAP["VWAP"].append(volumated_average_price)
 
 			
 	return pd.DataFrame(ResVWAP)
@@ -35,57 +35,94 @@ def MyVwap(df):
 
 #Fetching and storing values
 exchange = ccxt.binance()
-bars = exchange.fetch_ohlcv('BTC/USDT', timeframe='15m', limit=65)
+bars = exchange.fetch_ohlcv('BTC/USDT', timeframe='15m', limit=161)
 df = pd.DataFrame(bars, columns=['time', 'open', 'high', 'low', 'close', 'volume'])
 df['time'] = pd.to_datetime(df['time'], unit='ms')
 df.set_index("time",inplace=True)
 
+
+
+
+
 vwap=MyVwap(df)
-# print(vwap)
-
-
-
 #returning my own function of calculating vwap values
 
 
 
 
 
-# #dry run 
-# position=False
-# hit=0
-# miss=0
-# percentage_gain_frequency=[]
-# Long_or_short=False
-# balance_in_dollars=300
-# spot=0
-# profit=0
-
-# for i in range(20):
-# 	percentage_gain_frequency.append(50)
 
 
-# entry=None
-# for i in range(50):
-# 	#checking for an entry in long position
-# 	if df['open']>vwap[i] and !Long_or_short:
+#Testing out profits(not losses) on btc 15m timeframe
+balance=100
+profits=[]
+losses=[]
 
-# 		if entry!=None:
+IsAboveVWAP=False
+IsBelowVWAP=False
+
+entry=0
+minmaxVal=0
 
 
 
-# 		entry=df['open']
-# 		Long_or_short=True
-
-# 	#checking for an entry in short position
-# 	if df['open']<vwap[i] and Long_or_short:
+for value in range(vwap.shape[0]):
 
 
-# 		if entry !=None:
+	if(df["open"][value]>vwap["VWAP"][value] and IsAboveVWAP):
+		minmaxVal=max(minmaxVal,df["high"][value])
+		continue
+	if(df["open"][value]>vwap["VWAP"][value] and IsAboveVWAP==False):
+
+		if(IsBelowVWAP==True):
+			if(minmaxVal>entry):
+				losses.append(((minmaxVal-entry)/entry)*100)
+
+			else:
+				profits.append(((entry-minmaxVal)/entry)*100)
 
 
-# 		entry=df['open']
-# 		Long_or_short=False
+		IsAboveVWAP=True
+		IsBelowVWAP=False
+		entry=df["open"][value]
+		minmaxVal=df["high"][value]
+		continue
+
+
+
+
+	if(df["open"][value]<vwap["VWAP"][value] and IsBelowVWAP):
+		minmaxVal=min(minmaxVal,df["low"][value])
+		continue
+
+	if(df["open"][value]<vwap["VWAP"][value] and IsBelowVWAP==False):
+
+		if(IsAboveVWAP==True):
+			if(minmaxVal>entry):
+				profits.append(((minmaxVal-entry)/entry)*100)
+
+			else:
+				losses.append(((entry-minmaxVal)/entry)*100)
+
+
+
+
+		IsBelowVWAP=True
+		IsAboveVWAP=False
+		entry=df["open"][value]
+		minmaxVal=df["low"][value]
+		continue
+
+
+print(profits,losses)
+
+
+
+
+
+
+
+
 
 
 
