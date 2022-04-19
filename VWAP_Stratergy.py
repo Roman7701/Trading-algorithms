@@ -113,7 +113,6 @@ for value in range(vwap.shape[0]):
 		minmaxVal=df["low"][value]
 		continue
 
-
 print(profits,losses)
 
 
