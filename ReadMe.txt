@@ -22,10 +22,10 @@ Will develop this algorithm further and try to write code to connect to Binance 
 
 I have explained the trading stratergy pretty cleary . If you still didnt understand anything , I can't help you in any way .If you are smart enough ,you could use this algorithm and connect it to Binance api and make some money .
 
-You can use it to test out the max possible profits you can achieve in a day(Not losses).
+You can use this code to test out the max possible profits you can achieve in a day(Not losses).
 
 
-NOTE:You have to adjust the number candles you are retrieving while fetching data in the code because vwap values are calculated based on the start of the day.
+NOTE:You have to adjust the number candles while fetching data in the code because vwap values are calculated based on the start of the day.
 
 
 WILL DEVELOP MORE STRATERGIES AND I AM JUST A BEGINER SO NO HATE ON LMAOO.
