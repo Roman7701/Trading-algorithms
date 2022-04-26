@@ -35,7 +35,7 @@ def MyVwap(df):
 
 #Fetching and storing values
 exchange = ccxt.binance()
-bars = exchange.fetch_ohlcv('BTC/USDT', timeframe='15m', limit=75)
+bars = exchange.fetch_ohlcv('BTC/USDT', timeframe='15m', limit=56)
 df = pd.DataFrame(bars, columns=['time', 'open', 'high', 'low', 'close', 'volume'])
 df['time'] = pd.to_datetime(df['time'], unit='ms')
 df.set_index("time",inplace=True)
@@ -71,7 +71,7 @@ maxVal=0
 #Trade variables 
 
 balance=130
-position=130
+position=0
 tp=[0,0,0,0]
 ProfitsMarks=[4,8,14,20]
 sl=0
@@ -89,6 +89,8 @@ TradeIsOpen=False
 
 for value in range(vwap.shape[0]):
 
+	print(balance,position)
+
 
 	if(df["open"][value]>vwap["VWAP"][value] and IsAboveVWAP):
 		if(TradeIsOpen==False):
@@ -96,10 +98,11 @@ for value in range(vwap.shape[0]):
 
 
 		minVal=min(df["low"][value],minVal)
-		maxVal=max(df["high"][value],minVal)
+		maxVal=max(df["high"][value],maxVal)
 
 		if(minVal<=sl):
 			balance+=position/2
+			
 			position=0
 			tp=[0,0,0,0]
 			tpStatus=[False,False,False,False]
@@ -111,7 +114,7 @@ for value in range(vwap.shape[0]):
 
 				if(maxVal>=tp[i] and tpStatus[i]==False):
 					position-=qrtr
-					balance+=qrtr*(100+ProfitsMarks[i])
+					balance+=qrtr*((1+(ProfitsMarks[i]/100)))
 					tpStatus[i]=True
 
 			if(tpStatus[3]):
@@ -127,8 +130,10 @@ for value in range(vwap.shape[0]):
 		
 
 		if(TradeIsOpen):
-			position=position*(100-((df["open"][value]-entry)/100))
-			balance=position
+			#bug here
+			position=position*(1-(((df["open"][value]-entry)/entry)*leverage))
+			balance+=position
+			position=0
 			tp=[0,0,0,0]
 			tpStatus=[False,False,False,False]	
 
@@ -139,12 +144,12 @@ for value in range(vwap.shape[0]):
 		IsBelowVWAP=False
 		TradeIsOpen=True
 
-		tp[0]=entry*(100+(4/leverage))
-		tp[1]=entry*(100+(8/leverage))
-		tp[2]=entry*(100+(14/leverage))
-		tp[3]=entry*(101)
+		tp[0]=entry*((100+(ProfitsMarks[0]/leverage))/100)
+		tp[1]=entry*((100+(ProfitsMarks[1]/leverage))/100)
+		tp[2]=entry*((100+(ProfitsMarks[2]/leverage))/100)
+		tp[3]=entry*((100+(ProfitsMarks[3]/leverage))/100)
 		tpStatus=[False,False,False,False]
-		sl=entry*(100-(50/leverage))
+		sl=entry*((100-(50/leverage))/100)
 
 
 		position=balance
@@ -164,11 +169,12 @@ for value in range(vwap.shape[0]):
 			continue
 
 		minVal=min(df["low"][value],minVal)
-		maxVal=min(df["high"][value],minVal)
+		maxVal=max(df["high"][value],maxVal)
 
 
 		if(maxVal>=sl):
 			balance+=position/2
+		
 			position=0
 			tp=[0,0,0,0]
 			tpStatus=[False,False,False,False]
@@ -180,11 +186,14 @@ for value in range(vwap.shape[0]):
 			for i in range(4):
 				if(minVal<=tp[i] and tpStatus[i]==False):
 					position-=qrtr
-					balance+=qrtr*(100+ProfitsMarks[i])
+					balance+=qrtr*((1+(ProfitsMarks[i]/100)))
 					tpStatus[i]=True
 
 			if(tpStatus[3]):
 				TradeIsOpen=False
+				position=0
+				tp=[0,0,0,0]
+				tpStatus=[False,False,False,False]
 
 				continue
 
@@ -196,8 +205,9 @@ for value in range(vwap.shape[0]):
 
 
 		if(TradeIsOpen):
-			position=position*(100-((entry-df["open"][value])/100))
-			balance=position
+			position=position*(1-(((entry-df["open"][value])/entry)*leverage))
+			balance+=position
+			position=0
 			tp=[0,0,0,0]
 			tpStatus=[False,False,False,False]	
 
@@ -209,11 +219,11 @@ for value in range(vwap.shape[0]):
 		TradeIsOpen=True
 
 
-		tp[0]=entry*(100-(4/leverage))
-		tp[1]=entry*(100-(8/leverage))
-		tp[2]=entry*(100-(14/leverage))
-		tp[3]=entry*(99)
-		sl=entry*(100+(50/leverage))
+		tp[0]=entry*((100-(ProfitsMarks[0]/leverage))/100)
+		tp[1]=entry*((100-(ProfitsMarks[1]/leverage))/100)
+		tp[2]=entry*((100-(ProfitsMarks[2]/leverage))/100)
+		tp[3]=entry*((100-(ProfitsMarks[3]/leverage))/100)
+		sl=entry*((100+(50/leverage))/100)
 
 
 		position=balance
@@ -230,9 +240,8 @@ for value in range(vwap.shape[0]):
 
 
 
-print(balance)
 
-
+print(balance,position)
 
 
 
